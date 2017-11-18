@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.ztf.StockAnalysis.mappers.StockBaseDataMapper">
+
+	<resultMap id="TradeBaseData"
+		type="com.stock.ztf.StockAnalysis.beans.TradeBaseDataInfo">
+		<result column="code" property="code" />
+		<result column="tradeDate" property="tradeDate" />
+		<result column="dateType" property="dateType" />
+		<result column="open" property="open" />
+		<result column="close" property="close" />
+		<result column="high" property="high" />
+		<result column="low" property="low" />
+		<result column="volume" property="volume" />
+		<result column="amount" property="amount" />
+		<result column="amplitude" property="amplitude" />
+	</resultMap>
+
+	<select id="getTradeBaseData" resultType="java.util.HashMap">
+		SELECT
+		`code`,tradeDate,opened,closing,maximum,minimum,volume,turnVolume
+		FROM
+		tbl_trade_base_data
+	</select>
+
+	<select id="getStockCodeData" resultType="String">
+		select code from tbl_stock_code
+		<where>
+			<if test="condition!=null and condition !='' ">
+				`code` regexp #{condition}
+			</if>
+		</where>
+	</select>
+	
+	<select id="getHYStockCodeData" resultType="java.util.HashMap">
+		select code,zhName,market from tbl_trade_hystock_data
+		<where>
+			<if test="condition!=null and condition !='' ">
+				`code` regexp #{condition}
+			</if>
+		</where>
+	</select>
+
+	<select id="getStockTradeTblCount" resultType="int">
+		SELECT count(*)
+		FROM information_schema.TABLES
+		WHERE table_name=#{tblName};
+	</select>
+
+	<insert id="insertOrUpdateTradeBaseData">
+		INSERT INTO ${tblName}
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.tradeDate},
+			#{item.dateType},
+			#{item.open},
+			#{item.close},
+			#{item.high},
+			#{item.low},
+			#{item.volume},
+			#{item.amount},
+			#{item.amplitude})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		open=VALUES(open),close=VALUES(close),
+		high=VALUES(high),low=VALUES(low),
+		volume=VALUES(volume),amount=VALUES(amount),amplitude=VALUES(amplitude)
+	</insert>
+	
+	<insert id="insertOrUpdateTradeCMAData">
+		INSERT INTO ${tblName}
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.tradeDate},
+			#{item.dateType},
+			#{item.MA5},
+			#{item.MA10},
+			#{item.MA20},
+			#{item.MA30})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		MA5=VALUES(MA5),MA10=VALUES(MA10),
+		MA20=VALUES(MA20),MA30=VALUES(MA30)
+	</insert>
+	
+	<insert id="insertOrUpdateTradeMACDData">
+		INSERT INTO ${tblName}
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.tradeDate},
+			#{item.dateType},
+			#{item.DIFF},
+			#{item.DEA},
+			#{item.MACD})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		DIFF=VALUES(DIFF),DEA=VALUES(DEA),MACD=VALUES(MACD)
+	</insert>
+
+	<insert id="insertOrUpdateTradeZJLSData">
+		INSERT INTO ${tblName}
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.tradeDate},
+			#{item.dateType},
+			#{item.zhuInflows},
+			#{item.zhuInflowsRatio},
+			#{item.chaoInflows},
+			#{item.chaoInflowsRatio},
+			#{item.daInflows},
+			#{item.daInflowsRatio},
+			#{item.zhongInflows},
+			#{item.zhongInflowsRatio},
+			#{item.xiaoInflows},
+			#{item.xiaoInflowsRatio},
+			#{item.closing},
+			#{item.chg})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		zhuInflows=VALUES(zhuInflows),zhuInflowsRatio=VALUES(zhuInflowsRatio),
+		chaoInflows=VALUES(chaoInflows),chaoInflowsRatio=VALUES(chaoInflowsRatio),
+		daInflows=VALUES(daInflows),daInflowsRatio=VALUES(daInflowsRatio),
+		zhongInflows=VALUES(zhongInflows),zhongInflowsRatio=VALUES(zhongInflowsRatio),
+		xiaoInflows=VALUES(xiaoInflows),xiaoInflowsRatio=VALUES(xiaoInflowsRatio),
+		closing=VALUES(closing),chg=VALUES(chg)
+	</insert>
+
+	<insert id="insertOrUpdateStockCode">
+		INSERT INTO tbl_stock_code
+		VALUES (#{code},#{zhName})
+		ON DUPLICATE KEY UPDATE zhName=VALUES(zhName)
+	</insert>
+
+	<insert id="createStockTradeTbl">
+		CREATE TABLE ${tblName}_${year} LIKE ${tblName}
+	</insert>
+	
+	<insert id="insertOrUpdateTradeMRHYData">
+		INSERT INTO tbl_trade_MRHY_data
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.zhName},
+			#{item.chg},
+			#{item.value},
+			#{item.rate},
+			#{item.up},
+			#{item.down})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		chg=VALUES(chg),value=VALUES(value),rate=VALUES(rate),
+		up=VALUES(up),down=VALUES(down)
+	</insert>
+	
+	<insert id="insertOrUpdateTradeHYStockData">
+		INSERT INTO tbl_trade_HYStock_data
+		VALUES
+		<foreach collection="datas" item="item" index="index" separator=",">
+			(#{item.hyCode},
+			#{item.code},
+			#{item.zhName},
+			#{item.market})
+		</foreach>		
+		ON DUPLICATE KEY UPDATE zhName=VALUES(zhName),market=VALUES(market)
+	</insert>
+	
+	<select id="getHYCode" resultType="String">
+		select code FROM tbl_trade_mrhy_data
+	</select>
+
+</mapper> 

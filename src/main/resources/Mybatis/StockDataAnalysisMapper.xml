@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.ztf.StockAnalysis.mappers.StockDataAnalysisMapper">
+
+	<select id="getTradeData" resultType="java.util.HashMap">
+		SELECT
+		b.code,b.tradeDate,b.dateType,b.open, b.close, b.high, b.low,b.volume,
+		b.amount, b.amplitude,
+		m.DIFF,m.DEA,m.MACD,
+		c.MA5,c.MA10,c.MA20,c.MA30
+		FROM (select * FROM tbl_trade_base_data_${year} where
+		dateType=#{dtype} and code=#{code}) b
+		left join
+		tbl_trade_macd_data_${year} m on m.code=b.code and
+		m.tradeDate=b.tradeDate and m.dateType=b.dateType
+		left join
+		tbl_trade_cma_data_${year} c on c.code=b.code and
+		c.tradeDate=b.tradeDate and c.dateType=b.dateType
+	</select>
+
+	<select id="getStockCodeData" resultType="java.util.HashMap">
+		select `code`,zhName from tbl_stock_code
+		<where>
+			<if test="condition!=null and condition !='' ">
+				`code` regexp #{condition}
+			</if>
+		</where>
+	</select>
+
+	<select id="getStockTradeTblCount" resultType="int">
+		SELECT count(*)
+		FROM information_schema.TABLES
+		WHERE table_name=#{tblName};
+	</select>
+
+	<insert id="insertOrUpdateAnalysisData">
+		INSERT INTO tbl_stockanalysis_data
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.isZheng},
+			#{item.dateList},
+			#{item.ma5Changes},
+			#{item.changeFu},
+			#{item.dateType},
+			#{item.startDate},
+			#{item.endDate})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		isZheng=VALUES(isZheng),dateList=VALUES(dateList),
+		dateCount=VALUES(dateCount),ma5Changes=VALUES(ma5Changes),
+		changeFu=VALUES(changeFu),dateType=VALUES(dateType),
+		startDate=VALUES(startDate),endDate=VALUES(endDate)
+	</insert>
+
+</mapper> 

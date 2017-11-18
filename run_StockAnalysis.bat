@@ -1,0 +1,1 @@
+java -jar target/StockAnalysis-0.0.1-SNAPSHOT.jar

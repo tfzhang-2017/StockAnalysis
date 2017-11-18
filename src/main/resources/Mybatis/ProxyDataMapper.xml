@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.ztf.StockAnalysis.mappers.ProxyDataMapper">
+
+	<resultMap id="ProxyData" type="com.stock.ztf.StockAnalysis.beans.ProxyData">
+		<result column="ip" property="ip" />
+		<result column="port" property="port" />
+		<result column="type" property="type" />
+		<result column="speed" property="speed" />
+		<result column="timeout" property="timeout" />
+		<result column="live" property="live" />
+	</resultMap>
+
+	<select id="getProxyData" resultMap="ProxyData">
+		SELECT ip,`port`,type,speed,timeout,live
+		FROM tbl_proxy_data
+	</select>
+	
+	<insert id="addProxyData">
+	INSERT INTO tbl_proxy_data (ip,`port`,type,speed,timeout,live) 
+	VALUES (#{ip},#{port},#{type},#{speed},#{timeout},#{live}) 
+	ON DUPLICATE KEY UPDATE type=VALUES(type),speed=VALUES(speed),
+	timeout=VALUES(timeout),live=VALUES(live)	
+	</insert>
+
+</mapper> 

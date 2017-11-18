@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<!-- %m输出的信息,%p日志级别,%t线程名,%d日期,%c类的全名,,,, -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<charset>UTF-8</charset>
+			<pattern>%d %p (%file:%line\)- %m%n</pattern>
+		</encoder>
+	</appender>
+	<appender name="baselog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/base.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>log/base.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+			<maxFileSize>10MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<charset>UTF-8</charset>
+			<pattern>
+				<pattern>%d %p (%file:%line\)- %m%n</pattern>
+			</pattern>
+		</encoder>
+	</appender>
+	<logger name="org.apache.ibatis.logging" level="ERROR" />
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+	</root>
+	<logger name="com.stock.ztf.StockAnalysis.business" level="debug">
+		<appender-ref ref="baselog" />
+	</logger>
+	
+</configuration>  
