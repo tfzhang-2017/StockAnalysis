@@ -37,7 +37,7 @@ public class StockDataPickerTask {
 	/**
 	 * 获取股票交易历史基本数据
 	 */
-	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
+//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
 	// @Scheduled(cron = "0 0 9-15 * * ?")
 	public void timeTaskPickerTradeBaseData1() {
 		List<Map<String, Object>> codeDatas = stockBaseDataMapper.getHYStockCodeData("^0|^6");

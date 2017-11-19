@@ -101,4 +101,17 @@ public class FnUtils {
         }
         return false;
     }
+	
+	/**
+	 * 转换List<T> to List<String>
+	 * @param ts
+	 * @return
+	 */
+	public static <T> List<String> toStringList(List<T> ts) {
+        List<String> rets=new ArrayList<String>();
+        for (T t : ts) {
+        	rets.add(t.toString());
+		}
+        return rets;
+    }
 }

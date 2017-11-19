@@ -2,20 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.stock.ztf.StockAnalysis.mappers.StockDataAnalysisMapper">
 
-	<select id="getTradeData" resultType="java.util.HashMap">
+	<select id="getTradeCMAData" resultType="java.util.HashMap">
 		SELECT
 		b.code,b.tradeDate,b.dateType,b.open, b.close, b.high, b.low,b.volume,
 		b.amount, b.amplitude,
-		m.DIFF,m.DEA,m.MACD,
-		c.MA5,c.MA10,c.MA20,c.MA30
-		FROM (select * FROM tbl_trade_base_data_${year} where
-		dateType=#{dtype} and code=#{code}) b
-		left join
-		tbl_trade_macd_data_${year} m on m.code=b.code and
-		m.tradeDate=b.tradeDate and m.dateType=b.dateType
-		left join
-		tbl_trade_cma_data_${year} c on c.code=b.code and
+		MA5,MA10,MA20,MA30
+		FROM (select * FROM
+		tbl_trade_base_data_2017 where
+		dateType='day' and code='600221') b
+		left
+		join
+		tbl_trade_cma_data_2017 c on c.code=b.code and
 		c.tradeDate=b.tradeDate and c.dateType=b.dateType
+		where MA5!=''
 	</select>
 
 	<select id="getStockCodeData" resultType="java.util.HashMap">
@@ -33,7 +32,7 @@
 		WHERE table_name=#{tblName};
 	</select>
 
-	<insert id="insertOrUpdateAnalysisData">
+	<insert id="insertOrUpdateAnalysisDatas">
 		INSERT INTO tbl_stockanalysis_data
 		VALUES
 		<foreach collection="datas" item="item" index="index"
@@ -54,5 +53,26 @@
 		changeFu=VALUES(changeFu),dateType=VALUES(dateType),
 		startDate=VALUES(startDate),endDate=VALUES(endDate)
 	</insert>
+
+	<insert id="insertOrUpdateAnalysisData" parameterType="Map">
+		INSERT
+		INTO tbl_stockanalysis_data
+		VALUES
+		(#{code},#{isZheng},#{dateList},#{dateCount},#{ma5Changes},#{changeFu},#{dateType},#{startDate},#{endDate})
+		ON DUPLICATE KEY UPDATE
+		isZheng=VALUES(isZheng),dateList=VALUES(dateList),
+		dateCount=VALUES(dateCount),ma5Changes=VALUES(ma5Changes),
+		changeFu=VALUES(changeFu),dateType=VALUES(dateType),
+		startDate=VALUES(startDate),endDate=VALUES(endDate)
+	</insert>
+
+	<select id="getHYStockCodeData" resultType="java.util.HashMap">
+		select code,zhName,market from tbl_trade_hystock_data
+		<where>
+			<if test="condition!=null and condition !='' ">
+				`code` regexp #{condition}
+			</if>
+		</where>
+	</select>
 
 </mapper> 

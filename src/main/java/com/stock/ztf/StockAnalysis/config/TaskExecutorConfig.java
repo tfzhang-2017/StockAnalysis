@@ -21,9 +21,9 @@ public class TaskExecutorConfig extends AsyncConfigurerSupport {
 	@Override
 	public Executor getAsyncExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(20);
-		taskExecutor.setMaxPoolSize(50);
-		taskExecutor.setQueueCapacity(25);
+		taskExecutor.setCorePoolSize(40);
+		taskExecutor.setMaxPoolSize(100);
+		taskExecutor.setQueueCapacity(30);
 		taskExecutor.setWaitForTasksToCompleteOnShutdown(true);  
 		taskExecutor.setAwaitTerminationSeconds(60 * 15);
 		taskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());  
@@ -46,9 +46,9 @@ public class TaskExecutorConfig extends AsyncConfigurerSupport {
 
 		// 手动处理捕获的异常
 		@Override
-		public void handleUncaughtException(Throwable throwable, Method method, Object... obj) {
-			logger.error("MyAsyncException message - " + throwable.getMessage());
+		public void handleUncaughtException(Throwable throwable, Method method, Object... obj) {			
 			logger.error("MyAsyncMethod name - " + method.getName());
+			logger.error("MyAsyncException message - " + throwable.getMessage(),throwable);
 			for (Object param : obj) {
 				logger.error("MyAsyncParameter value - " + param);
 			}

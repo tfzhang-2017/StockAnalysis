@@ -31,7 +31,7 @@
 			</if>
 		</where>
 	</select>
-	
+
 	<select id="getHYStockCodeData" resultType="java.util.HashMap">
 		select code,zhName,market from tbl_trade_hystock_data
 		<where>
@@ -69,7 +69,7 @@
 		high=VALUES(high),low=VALUES(low),
 		volume=VALUES(volume),amount=VALUES(amount),amplitude=VALUES(amplitude)
 	</insert>
-	
+
 	<insert id="insertOrUpdateTradeCMAData">
 		INSERT INTO ${tblName}
 		VALUES
@@ -88,7 +88,7 @@
 		MA5=VALUES(MA5),MA10=VALUES(MA10),
 		MA20=VALUES(MA20),MA30=VALUES(MA30)
 	</insert>
-	
+
 	<insert id="insertOrUpdateTradeMACDData">
 		INSERT INTO ${tblName}
 		VALUES
@@ -146,7 +146,7 @@
 	<insert id="createStockTradeTbl">
 		CREATE TABLE ${tblName}_${year} LIKE ${tblName}
 	</insert>
-	
+
 	<insert id="insertOrUpdateTradeMRHYData">
 		INSERT INTO tbl_trade_MRHY_data
 		VALUES
@@ -165,21 +165,23 @@
 		chg=VALUES(chg),value=VALUES(value),rate=VALUES(rate),
 		up=VALUES(up),down=VALUES(down)
 	</insert>
-	
+
 	<insert id="insertOrUpdateTradeHYStockData">
 		INSERT INTO tbl_trade_HYStock_data
 		VALUES
-		<foreach collection="datas" item="item" index="index" separator=",">
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
 			(#{item.hyCode},
 			#{item.code},
 			#{item.zhName},
 			#{item.market})
-		</foreach>		
+		</foreach>
 		ON DUPLICATE KEY UPDATE zhName=VALUES(zhName),market=VALUES(market)
 	</insert>
-	
+
 	<select id="getHYCode" resultType="String">
-		select code FROM tbl_trade_mrhy_data
+		select code FROM
+		tbl_trade_mrhy_data
 	</select>
 
 </mapper> 

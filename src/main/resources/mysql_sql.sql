@@ -5,12 +5,13 @@ CREATE TABLE IF NOT EXISTS `tbl_stockAnalysis_data`(
    `code` VARCHAR(10) NOT NULL,
    `isZheng` boolean DEFAULT false,
    `dateList` VARCHAR(526) DEFAULT NULL,
+   `dateCount` int(11) DEFAULT 0,
    `ma5Changes` VARCHAR(526) DEFAULT NULL,
    `changeFu` float(10,3) DEFAULT NULL,
    `dateType` VARCHAR(11) NOT NULL,
    `startDate` VARCHAR(11) DEFAULT NULL,
    `endDate` VARCHAR(11) DEFAULT NULL,
-   PRIMARY KEY (`code`,`dateType`)
+   PRIMARY KEY (`code`,`dateType`,`startDate`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
