@@ -33,13 +33,12 @@ public class StockDataPickerTask {
 	@Autowired
 	private StockDataPicker stockDataPicker;
 
-
 	/**
-	 * 获取股票交易历史基本数据
+	 * 获取股票交易历史数据
 	 */
-//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
+	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
 	// @Scheduled(cron = "0 0 9-15 * * ?")
-	public void timeTaskPickerTradeBaseData1() {
+	public void pickerStockTradeBaseData() {
 		List<Map<String, Object>> codeDatas = stockBaseDataMapper.getHYStockCodeData("^0|^6");
 		for (Map<String, Object> codes : codeDatas) {
 			String code = (String) codes.get("code");
@@ -59,13 +58,39 @@ public class StockDataPickerTask {
 			// TradeMACDDataInfo.class);
 		}
 	}
+	
+	/**
+	 * 获取行业交易历史数据
+	 */
+//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
+	// @Scheduled(cron = "0 0 9-15 * * ?")
+	public void pickerHYTradeBaseData() {
+		List<String> codeDatas = stockBaseDataMapper.getHYCode();
+		for (String hyCode : codeDatas) {
+			String code = hyCode;
+			String market = "1";
+			// logger.debug("start get " + code + " day Trade real data ");
+			// pickerStockTradeRealData(code, market);
+			logger.debug("start get " + code + " day Trade Base data ");
+			stockDataPicker.pickerStockTradeBaseData(code, market, "day", "K");
+			// logger.debug("start get "+code+" weekday Trade Base data ");
+			// pickerStockTradeBaseData(code,market,"weekday","wk");
+			// logger.debug("start get "+code+" month Trade Base data ");
+			// pickerStockTradeBaseData(code,market,"month","mk");
+			logger.debug("start get " + code + " day Trade cam data ");
+			stockDataPicker.pickerStockTradeZhiBiaoData(code, market, "K", "cma", "day", TradeCMADataInfo.class);
+			// logger.debug("start get " + code + " day Trade macd data ");
+			// pickerStockTradeZhiBiaoData(code, market, "K", "macd", "day",
+			// TradeMACDDataInfo.class);
+		}
+	}
 
 	/**
-	 * 获取股票交易历史基本数据
+	 * 获取自选股票交易历史数据
 	 */
 	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
 	// @Scheduled(cron = "0 0 9-15 * * ?")
-	public void timeTaskPickerTradeBaseData() {
+	public void pickerCustomStockTradeBaseData() {
 		// List<String> codeDatas =
 		// stockBaseDataMapper.getStockCodeData("^0|^6");
 		// for (String code : codeDatas) {
@@ -101,7 +126,6 @@ public class StockDataPickerTask {
 		// }
 	}
 
-
 	/**
 	 * 获取行业股票列表数据
 	 */
@@ -113,6 +137,15 @@ public class StockDataPickerTask {
 		}
 	}
 
+	/**
+	 * 获取每日行业交易数据
+	 */
+	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
+	public void pickerHYTradeData() {
+		logger.debug("get HY Real Trade data start");
+		stockDataPicker.pickerStockTradeMRHYData();
+		logger.debug("get HY Real Trade data end ");
+	}
 
 	/**
 	 * 从文件读取股票代码数据，插入数据库
@@ -120,8 +153,19 @@ public class StockDataPickerTask {
 	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 6000 * oneMinute)
 	public void pickerStockCodeData() {
 		logger.debug("Insert Stock Code data start");
-		stockDataPicker.pickerStockCodeData();		
+		stockDataPicker.pickerStockCodeData();
 		logger.debug("Insert Stock Code data end");
-	}	
+	}
 
+	/**
+	 * 获取行业股票投资评级数据
+	 */
+//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 2000 * oneMinute)
+	public void pickerHYStockCTData() {
+		List<String> hyCodes = stockBaseDataMapper.getHYCode();
+		for (String hyCode : hyCodes) {
+			stockDataPicker.pickerHYStocCTData(hyCode);
+		}
+	}
+	
 }

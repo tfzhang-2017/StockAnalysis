@@ -1,6 +1,7 @@
 package com.stock.ztf.StockAnalysis.business;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,7 @@ public class StockDataPicker {
 	}
 
 	/**
-	 * 获取股票交易每日行业数据
+	 * 获取行业交易每日数据
 	 */
 	public void pickerStockTradeMRHYData() {
 		String url = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&cmd=C._BKHY&sty=FPGBKI&st=c&sr=-1&p=1&ps=5000&cb=&js=[(x)]&token=7bc05d0d4c3c22ef9fca8c2a912d779c&v=0.9668453476452248";
@@ -560,4 +561,65 @@ public class StockDataPicker {
 		logger.debug("Insert code " + code + " Trade ZJLS data end");
 	}
 
+	/**
+	 * 获取行业股票投资评级数据
+	 */
+//	@Async
+	public void pickerHYStocCTData(String hyCode) {		
+		String url = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&cmd=C.{hyCode}1"
+		+ "&sty=GEMCPF&st=(BNum)&sr=-1&p=1&ps=500&cb=&js=[(x)]&token=3a965a43f705cf1d9ad7e1a3e429d622&rt=50318324";
+		logger.debug("url:" + url);
+		try {
+			logger.debug("get hyCode:" + hyCode + " CT data from url start");
+			List<String> stockCTDataList = null;
+			try {
+				logger.debug("get hyCode:" + hyCode + " CT data.");
+				String stockCTDataJson = httpUtil.getUrlStr(url, hyCode);
+				stockCTDataList = JacksonJsonUtil.json2GenericObject(stockCTDataJson,
+						new TypeReference<List<String>>() {
+						});
+			} catch (Exception e) {
+				logger.error("json2Object error:" + e.getMessage(), e);
+			}
+			if (stockCTDataList == null || stockCTDataList.isEmpty()) {
+				logger.warn("get hyCode:" + hyCode + " CT data failed.");
+				return;
+			}
+			logger.debug("get hyCode:" + hyCode + " CT data from url end");
+
+			List<Map<String, Object>> stockCTDataInfos = new ArrayList<Map<String, Object>>();
+
+			/**
+			 * 解析行业股票投资评级数据
+			 */
+			for (String data : stockCTDataList) {
+				String[] datas = data.split(",");
+				if (datas[1].startsWith("9") || datas[1].startsWith("2")) {
+					continue;
+				}
+				Map<String, Object> stockCTDataInfo = new HashMap<String,Object>();
+				stockCTDataInfo.put("code",datas[1]);
+				if (datas[5].contains("-")) {
+					continue;
+				}
+				stockCTDataInfo.put("yanbaoshu",Integer.parseInt(datas[5]));
+				stockCTDataInfo.put("mairu",Integer.parseInt(datas[6]));
+				stockCTDataInfo.put("zengchi",Integer.parseInt(datas[7]));
+				stockCTDataInfo.put("zhongxing",Integer.parseInt(datas[8]));
+				stockCTDataInfo.put("jianchi",Integer.parseInt(datas[9]));
+				stockCTDataInfo.put("maichu",Integer.parseInt(datas[10]));
+				stockCTDataInfos.add(stockCTDataInfo);
+			}
+
+			logger.debug("Insert HYStock CT data start");
+
+			/**
+			 * 插入行业股票投资评级数据
+			 */
+			stockBaseDataMapper.insertOrUpdateStockCTData(stockCTDataInfos);
+		} catch (Exception e) {
+			logger.error("get HYStock CT data error:" + e.getMessage(), e);
+		}
+		logger.debug("Insert HYStock CT data end");
+	}
 }

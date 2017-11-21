@@ -46,8 +46,8 @@ public class StockAnalysisTask {
 	 * @param dType
 	 * @return String
 	 */
-	@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
-	public String baseAnalysis() {
+//	@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
+	public String stockCMAAnalysis() {
 		String retStr = "";
 //		List<Map<String, Object>> codeDatas = stockDataAnalysisMapper.getStockCodeData("^0|^6");
 		List<Map<String, Object>> codeDatas = stockDataAnalysisMapper.getHYStockCodeData("^0|^6");
@@ -57,6 +57,25 @@ public class StockAnalysisTask {
 //			stockAnalysis.macdAnalysis("2016,2017", "day", code);
 			stockAnalysis.maAnalysis("2016,2017", "day", code);
 			logger.debug("analysis " + code + " trade data end");
+		}
+		return retStr;
+	}
+	
+	/**
+	 * 打印行业分析结果
+	 * @param year
+	 * @param dType
+	 * @return String
+	 */
+	@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
+	public String HYCMAAnalysis() {
+		String retStr = "";
+		List<String> codeDatas = stockDataAnalysisMapper.getHYCodeData();
+		for (String hyCode : codeDatas) {
+			logger.debug("analysis " + hyCode + " trade data start");
+//			stockAnalysis.macdAnalysis("2016,2017", "day", code);
+			stockAnalysis.maAnalysis("2016,2017", "day", hyCode);
+			logger.debug("analysis " + hyCode + " trade data end");
 		}
 		return retStr;
 	}

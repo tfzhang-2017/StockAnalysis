@@ -183,5 +183,24 @@
 		select code FROM
 		tbl_trade_mrhy_data
 	</select>
+	
+	<insert id="insertOrUpdateStockCTData">
+		INSERT INTO tbl_stockCT_data
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.yanbaoshu},
+			#{item.mairu},
+			#{item.zengchi},
+			#{item.zhongxing},
+			#{item.jianchi},
+			#{item.maichu})
+		</foreach>
+		ON DUPLICATE KEY UPDATE 
+		yanbaoshu=VALUES(yanbaoshu),mairu=VALUES(mairu),
+		zengchi=VALUES(zengchi),zhongxing=VALUES(zhongxing),
+		jianchi=VALUES(jianchi),maichu=VALUES(maichu)
+	</insert>
 
 </mapper> 

@@ -36,5 +36,7 @@ public interface StockBaseDataMapper {
 	int insertOrUpdateTradeHYStockData(@Param("datas") List<?> datas);
 	
 	List<String> getHYCode();
+	
+	int insertOrUpdateStockCTData(@Param("datas") List<?> datas);
 
 }

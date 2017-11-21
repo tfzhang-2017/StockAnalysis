@@ -286,7 +286,7 @@ public class StockAnalysis {
 	 * @return Map<String, Object>
 	 */
 	@Async
-	public Map<String, Object> maAnalysis(String year, String dType, String code) {
+	synchronized public Map<String, Object> maAnalysis(String year, String dType, String code) {
 		String retStr = "";
 		String retStatus = "";
 		List<Map<String, Object>> stockDatas = new ArrayList<Map<String, Object>>();
@@ -294,6 +294,7 @@ public class StockAnalysis {
 		for (String y : years) {
 			stockDatas.addAll(stockDataAnalysisMapper.getTradeCMAData(y, dType, code));
 		}
+		logger.debug("get code:"+code+" stockDatas " + stockDatas.size() + " records");
 		/**
 		 * 计算每日股价涨跌幅、MA5的涨跌幅
 		 */
@@ -385,7 +386,7 @@ public class StockAnalysis {
 		/*
 		 * 分析结果记入数据库
 		 */
-		
+		logger.debug("get code:"+code+" tongjiMA5Change " + tongjiMA5Change.size() + " records");
 		for (Map<String, Object> cMap : tongjiMA5Change) {
 			Map<String, Object> data=new HashMap<String, Object>();
 			data.put("code", code);

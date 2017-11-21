@@ -15,6 +15,8 @@ public interface StockDataAnalysisMapper {
 	
 	List<Map<String, Object>> getHYStockCodeData(@Param("condition") String condition);
 	
+	List<String> getHYCodeData();
+	
 	int insertOrUpdateAnalysisData(Map<String, Object> datas);
 	
 	int insertOrUpdateAnalysisDatas(@Param("datas") List<Map<String, Object>> datas);

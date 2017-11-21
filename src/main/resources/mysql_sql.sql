@@ -1,4 +1,15 @@
-
+--股票研报评级数据
+--dateType数据类型：日，周，月
+CREATE TABLE IF NOT EXISTS `tbl_stockCT_data`(
+   `code` VARCHAR(10) NOT NULL,
+   `yanbaoshu` int(11) DEFAULT 0,
+   `mairu` int(11) DEFAULT 0,
+   `zengchi` int(11) DEFAULT 0,
+   `zhongxing` int(11) DEFAULT 0,
+   `jianchi` int(11) DEFAULT 0,
+   `maichu` int(11) DEFAULT 0,
+   PRIMARY KEY (`code`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
 --股票分析用数据
 --dateType数据类型：日，周，月
 CREATE TABLE IF NOT EXISTS `tbl_stockAnalysis_data`(

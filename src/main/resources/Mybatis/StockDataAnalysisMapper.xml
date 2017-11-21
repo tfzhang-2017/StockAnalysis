@@ -8,11 +8,11 @@
 		b.amount, b.amplitude,
 		MA5,MA10,MA20,MA30
 		FROM (select * FROM
-		tbl_trade_base_data_2017 where
-		dateType='day' and code='600221') b
+		tbl_trade_base_data_${year} where
+		dateType=#{dtype} and code=#{code}) b
 		left
 		join
-		tbl_trade_cma_data_2017 c on c.code=b.code and
+		tbl_trade_cma_data_${year} c on c.code=b.code and
 		c.tradeDate=b.tradeDate and c.dateType=b.dateType
 		where MA5!=''
 	</select>
@@ -73,6 +73,11 @@
 				`code` regexp #{condition}
 			</if>
 		</where>
+	</select>
+
+	<select id="getHYCodeData" resultType="String">
+		select code FROM
+		tbl_trade_mrhy_data
 	</select>
 
 </mapper> 
