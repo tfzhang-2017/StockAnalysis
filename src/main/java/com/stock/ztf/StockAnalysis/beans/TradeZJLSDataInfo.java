@@ -17,6 +17,9 @@ public class TradeZJLSDataInfo {
 	private float xiaoInflowsRatio;
 	private float closing;
 	private float chg;
+	private short ws;
+	
+	
 	public String getCode() {
 		return code;
 	}
@@ -106,5 +109,11 @@ public class TradeZJLSDataInfo {
 	}
 	public void setChg(float chg) {
 		this.chg = chg;
+	}
+	public short getWs() {
+		return ws;
+	}
+	public void setWs(short ws) {
+		this.ws = ws;
 	}
 }

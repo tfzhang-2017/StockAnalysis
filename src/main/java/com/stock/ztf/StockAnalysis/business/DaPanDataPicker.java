@@ -3,20 +3,19 @@ package com.stock.ztf.StockAnalysis.business;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.stock.ztf.StockAnalysis.beans.TradeBaseDataInfo;
 import com.stock.ztf.StockAnalysis.beans.TradeZJLSDataInfo;
 import com.stock.ztf.StockAnalysis.mappers.StockBaseDataMapper;
 import com.stock.ztf.StockAnalysis.utils.FileUtils;
+import com.stock.ztf.StockAnalysis.utils.FnUtils;
 import com.stock.ztf.StockAnalysis.utils.JacksonJsonUtil;
 import com.stock.ztf.StockAnalysis.utils.ZLibUtils;
 
@@ -26,7 +25,7 @@ import com.stock.ztf.StockAnalysis.utils.ZLibUtils;
  * @author ztf
  *
  */
-@Component
+@Service
 public class DaPanDataPicker {
 
 	private final static Logger logger = LoggerFactory.getLogger(DaPanDataPicker.class);
@@ -45,7 +44,7 @@ public class DaPanDataPicker {
 	 * 老方法，暂时不用
 	 * 获取股票交易基本数据 开盘价，收盘价，最高价，最低价，成交量，成交额
 	 */
-	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 10 * oneMinute)
+//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 10 * oneMinute)
 	public void pickerStockTradeBaseData_backup() {
 		String url = "http://hq2fls.eastmoney.com/EM_Quote2010PictureApplication/Flash.aspx?"
 				+ "Type=CHD&ID=#{code}1&lastnum=300&r={random}";
@@ -115,10 +114,10 @@ public class DaPanDataPicker {
 				dBaseDataInfo.setCode(code);
 				dBaseDataInfo.setTradeDate(datas[0]);
 				dBaseDataInfo.setDateType("day");
-//				dBaseDataInfo.setOpened(Float.parseFloat(datas[1]));
-//				dBaseDataInfo.setClosing(Float.parseFloat(datas[2]));
-//				dBaseDataInfo.setMaximum(Float.parseFloat(datas[3]));
-//				dBaseDataInfo.setMinimum(Float.parseFloat(datas[4]));
+//				dBaseDataInfo.setOpened(FnUtils.strToFloat(datas[1]));
+//				dBaseDataInfo.setClosing(FnUtils.strToFloat(datas[2]));
+//				dBaseDataInfo.setMaximum(FnUtils.strToFloat(datas[3]));
+//				dBaseDataInfo.setMinimum(FnUtils.strToFloat(datas[4]));
 //				dBaseDataInfo.setVolume(Long.parseLong(datas[5]));
 //				dBaseDataInfo.setTurnVolume(Long.parseLong(datas[6]));
 				stockTradeDataInfos.add(dBaseDataInfo);
@@ -131,14 +130,14 @@ public class DaPanDataPicker {
 				 */
 				if (!years.contains(dataYear)) {
 					if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
+//						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
 					}
 				}
 				/**
 				 * 插入基本交易数据
 				 */
-				stockBaseDataMapper.insertOrUpdateTradeBaseData(tblName + "_" + dataYear,
-						stockTradeDataInfoMap.get(dataYear));
+//				stockBaseDataMapper.insertOrUpdateTradeBaseData(tblName + "_" + dataYear,
+//						stockTradeDataInfoMap.get(dataYear));
 			}
 		} catch (Exception e) {
 			logger.error("get Code:" + code + " day trade data error:" + e.getLocalizedMessage());
@@ -149,7 +148,7 @@ public class DaPanDataPicker {
 	/**
 	 * 获取股票交易基本数据 开盘价，收盘价，最高价，最低价，成交量，成交额
 	 */
-	// @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 10 * oneMinute)
+//	 @Scheduled(initialDelay = 5 * oneSecond, fixedRate = 10 * oneMinute)
 	public void pickerStockTradeBaseData() {
 		String url = "http://hq2fls.eastmoney.com/EM_Quote2010PictureApplication/Flash.aspx?"
 				+ "Type=CHD&ID=#{code}1&lastnum=300&r={random}";
@@ -219,31 +218,21 @@ public class DaPanDataPicker {
 				dBaseDataInfo.setCode(code);
 				dBaseDataInfo.setTradeDate(datas[0]);
 				dBaseDataInfo.setDateType("day");
-//				dBaseDataInfo.setOpened(Float.parseFloat(datas[1]));
-//				dBaseDataInfo.setClosing(Float.parseFloat(datas[2]));
-//				dBaseDataInfo.setMaximum(Float.parseFloat(datas[3]));
-//				dBaseDataInfo.setMinimum(Float.parseFloat(datas[4]));
+//				dBaseDataInfo.setOpened(FnUtils.strToFloat(datas[1]));
+//				dBaseDataInfo.setClosing(FnUtils.strToFloat(datas[2]));
+//				dBaseDataInfo.setMaximum(FnUtils.strToFloat(datas[3]));
+//				dBaseDataInfo.setMinimum(FnUtils.strToFloat(datas[4]));
 //				dBaseDataInfo.setVolume(Long.parseLong(datas[5]));
 //				dBaseDataInfo.setTurnVolume(Long.parseLong(datas[6]));
 				stockTradeDataInfos.add(dBaseDataInfo);
 			}
-			for (String dataYear : stockTradeDataInfoMap.keySet()) {
-				String tblName = "tbl_trade_base_data";
-				logger.debug("Insert Day Trade data to " + tblName + "_" + dataYear);
-				/**
-				 * 创建对应年份的表
-				 */
-				if (!years.contains(dataYear)) {
-					if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-					}
-				}
-				/**
-				 * 插入基本交易数据
-				 */
-				stockBaseDataMapper.insertOrUpdateTradeBaseData(tblName + "_" + dataYear,
-						stockTradeDataInfoMap.get(dataYear));
-			}
+			
+			logger.debug("Insert Day Trade data to tbl_trade_base_data start");
+			/**
+			 * 插入基本交易数据
+			 */
+			stockBaseDataMapper.insertOrUpdateTradeBaseData(stockTradeDataInfos);
+			
 		} catch (Exception e) {
 			logger.error("get Code:" + code + " day trade data error:" + e.getLocalizedMessage());
 		}
@@ -317,15 +306,6 @@ public class DaPanDataPicker {
 				for (String data : stockTradeZJLSDatas) {
 					data = data.replaceAll("%", "").trim();
 					String[] datas = data.split(",");
-					String year = datas[0].substring(0, 4);
-					if (!stockTradeDataInfoMap.containsKey(year)) {
-						if (stockTradeDataInfoMap.size() != 0) {
-							logger.debug("Day Trade data:" + stockTradeDataInfoMap.keySet().toString() + ":"
-									+ stockTradeDataInfos.size());
-						}
-						stockTradeDataInfos = new ArrayList<TradeZJLSDataInfo>();
-						stockTradeDataInfoMap.put(year, stockTradeDataInfos);
-					}
 					/**
 					 * 股票代码，交易日，净流入额，净流入占比（主力：超大单：大单：中单：小单），收盘价，涨跌幅
 					 */
@@ -333,37 +313,25 @@ public class DaPanDataPicker {
 					tradeZJLSDataInfo.setCode(code);
 					tradeZJLSDataInfo.setTradeDate(datas[0]);
 					tradeZJLSDataInfo.setDateType("day");
-					tradeZJLSDataInfo.setZhuInflows(Float.parseFloat(datas[1]));
-					tradeZJLSDataInfo.setZhuInflowsRatio(Float.parseFloat(datas[2]));
-					tradeZJLSDataInfo.setChaoInflows(Float.parseFloat(datas[3]));
-					tradeZJLSDataInfo.setChaoInflowsRatio(Float.parseFloat(datas[4]));
-					tradeZJLSDataInfo.setDaInflows(Float.parseFloat(datas[5]));
-					tradeZJLSDataInfo.setDaInflowsRatio(Float.parseFloat(datas[6]));
-					tradeZJLSDataInfo.setZhongInflows(Float.parseFloat(datas[7]));
-					tradeZJLSDataInfo.setZhongInflowsRatio(Float.parseFloat(datas[8]));
-					tradeZJLSDataInfo.setXiaoInflows(Float.parseFloat(datas[9]));
-					tradeZJLSDataInfo.setXiaoInflowsRatio(Float.parseFloat(datas[10]));
-					tradeZJLSDataInfo.setClosing(Float.parseFloat(datas[11]));
-					tradeZJLSDataInfo.setChg(Float.parseFloat(datas[12]));
+					tradeZJLSDataInfo.setZhuInflows(FnUtils.strToFloat(datas[1]));
+					tradeZJLSDataInfo.setZhuInflowsRatio(FnUtils.strToFloat(datas[2]));
+					tradeZJLSDataInfo.setChaoInflows(FnUtils.strToFloat(datas[3]));
+					tradeZJLSDataInfo.setChaoInflowsRatio(FnUtils.strToFloat(datas[4]));
+					tradeZJLSDataInfo.setDaInflows(FnUtils.strToFloat(datas[5]));
+					tradeZJLSDataInfo.setDaInflowsRatio(FnUtils.strToFloat(datas[6]));
+					tradeZJLSDataInfo.setZhongInflows(FnUtils.strToFloat(datas[7]));
+					tradeZJLSDataInfo.setZhongInflowsRatio(FnUtils.strToFloat(datas[8]));
+					tradeZJLSDataInfo.setXiaoInflows(FnUtils.strToFloat(datas[9]));
+					tradeZJLSDataInfo.setXiaoInflowsRatio(FnUtils.strToFloat(datas[10]));
+					tradeZJLSDataInfo.setClosing(FnUtils.strToFloat(datas[11]));
+					tradeZJLSDataInfo.setChg(FnUtils.strToFloat(datas[12]));
 					stockTradeDataInfos.add(tradeZJLSDataInfo);
 				}
-				for (String dataYear : stockTradeDataInfoMap.keySet()) {
-					String tblName = "tbl_trade_zjls_data";
-					logger.debug("Insert Trade ZJLS data:" + tblName + "_" + dataYear);
-					/**
-					 * 创建对应年份的表
-					 */
-					if (!years.contains(dataYear)) {
-						if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-							stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-						}
-					}
-					/**
-					 * 插入基本交易数据
-					 */
-					stockBaseDataMapper.insertOrUpdateTradeZJLSData(tblName + "_" + dataYear,
-							stockTradeDataInfoMap.get(dataYear));
-				}
+				
+				/**
+				 * 插入基本交易数据
+				 */
+				stockBaseDataMapper.insertOrUpdateTradeZJLSData(stockTradeDataInfos);
 			} catch (Exception e) {
 				logger.error("get Code:" + code + " trade data error:" + e.getLocalizedMessage());
 			}

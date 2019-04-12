@@ -79,5 +79,15 @@
 		select code FROM
 		tbl_trade_mrhy_data
 	</select>
-
+	<insert id="insertOrUpdateStockShouYiData" parameterType="Map">
+		INSERT
+		INTO tbl_stockShouYi_data
+		VALUES
+		(#{code},#{shouYiLv},#{isZheng},#{maiRuJia},#{maiChuJia},#{startDate},#{endDate},#{dateCount})
+		ON DUPLICATE KEY UPDATE
+		shouYiLv=VALUES(shouYiLv),isZheng=VALUES(isZheng),
+		maiRuJia=VALUES(maiRuJia),maiChuJia=VALUES(maiChuJia),
+		startDate=VALUES(startDate),endDate=VALUES(endDate),
+		dateCount=VALUES(dateCount)
+	</insert>
 </mapper> 

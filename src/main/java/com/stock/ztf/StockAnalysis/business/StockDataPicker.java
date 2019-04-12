@@ -1,8 +1,6 @@
 package com.stock.ztf.StockAnalysis.business;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,14 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.stock.ztf.StockAnalysis.beans.TradeBaseDataInfo;
-import com.stock.ztf.StockAnalysis.beans.TradeHYStockDataInfo;
 import com.stock.ztf.StockAnalysis.beans.TradeMRHYDataInfo;
 import com.stock.ztf.StockAnalysis.beans.TradeZJLSDataInfo;
 import com.stock.ztf.StockAnalysis.beans.UrlDataInfo;
+import com.stock.ztf.StockAnalysis.beans.ZhiBiaoData;
 import com.stock.ztf.StockAnalysis.beans.ZhiBiaoEnum;
 import com.stock.ztf.StockAnalysis.mappers.StockBaseDataMapper;
 import com.stock.ztf.StockAnalysis.utils.DateUtil;
@@ -26,6 +24,7 @@ import com.stock.ztf.StockAnalysis.utils.FileUtils;
 import com.stock.ztf.StockAnalysis.utils.HttpUtil;
 import com.stock.ztf.StockAnalysis.utils.JacksonJsonUtil;
 import com.stock.ztf.StockAnalysis.utils.TimeUtils;
+import com.stock.ztf.StockAnalysis.utils.ZhiBiaoDataFactory;
 
 /**
  * 采集股票基础数据
@@ -33,7 +32,7 @@ import com.stock.ztf.StockAnalysis.utils.TimeUtils;
  * @author ztf
  *
  */
-@Component
+@Service
 public class StockDataPicker {
 
 	private final static Logger logger = LoggerFactory.getLogger(StockDataPicker.class);
@@ -105,19 +104,11 @@ public class StockDataPicker {
 
 			logger.debug("Insert Trade real data start");
 
-			String tblName = "tbl_trade_base_data";
-			String dataYear = DateUtil.getYear();
-			logger.debug("Insert Trade data to " + tblName + "_" + dataYear);
-			/**
-			 * 创建对应年份的表
-			 */
-			if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-				stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-			}
+			logger.debug("Insert Trade data to tbl_trade_base_data start");
 			/**
 			 * 插入基本交易数据
 			 */
-			stockBaseDataMapper.insertOrUpdateTradeBaseData(tblName + "_" + dataYear, stockTradeDataInfos);
+			stockBaseDataMapper.insertOrUpdateTradeBaseData(stockTradeDataInfos);
 		} catch (Exception e) {
 			logger.error("get Code:" + code + " trade real data error:" + e.getMessage(), e);
 		}
@@ -176,71 +167,15 @@ public class StockDataPicker {
 		logger.debug("Insert Trade MRHY data end");
 	}
 
-	/**
-	 * 获取行业股票列表 数据
-	 */
-	@Async
-	public void pickerStockTradeHYStockData(String hyCode) {
-		String url = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&"
-				+ "cmd=C.{hyCode}1&sty=FCOIATA&sortType=C&sortRule=-1&page=2&pageSize=500&"
-				+ "js=[(x)]&token=7bc05d0d4c3c22ef9fca8c2a912d779c&jsName=quote_123&_g=0.9954481305384073";
-		logger.debug("get Trade HYStock data start");
-		logger.debug("url:" + url);
-		try {
-			List<String> stockTradeDataList = null;
-			try {
-				logger.debug("get hyCode:" + hyCode + " stocklist data.");
-				String stockTradeDataJson = httpUtil.getUrlStr(url, hyCode);
-				stockTradeDataList = JacksonJsonUtil.json2GenericObject(stockTradeDataJson.replaceAll("[)(]", ""),
-						new TypeReference<List<String>>() {
-						});
-			} catch (Exception e) {
-				logger.error("json2Object error:" + e.getMessage(), e);
-			}
-			if (stockTradeDataList == null || stockTradeDataList.isEmpty()) {
-				logger.warn("get hyCode:" + hyCode + " stocklist data failed.");
-				return;
-			}
-			logger.warn("get hyCode:" + hyCode + " stocklist data end.");
-
-			List<TradeHYStockDataInfo> stockTradeDataInfos = new ArrayList<TradeHYStockDataInfo>();
-
-			/**
-			 * 解析行业股票列表数据
-			 */
-			for (String data : stockTradeDataList) {
-				String[] datas = data.split(",");
-				if (datas[1].startsWith("9") || datas[1].startsWith("2")) {
-					continue;
-				}
-				TradeHYStockDataInfo hyStockDataInfo = new TradeHYStockDataInfo();
-				hyStockDataInfo.setHyCode(hyCode);
-				hyStockDataInfo.setCode(datas[1]);
-				hyStockDataInfo.setZhName(datas[2]);
-				hyStockDataInfo.setMarket(datas[0]);
-				stockTradeDataInfos.add(hyStockDataInfo);
-			}
-
-			logger.debug("Insert Trade HYStock data start");
-
-			/**
-			 * 插入行业股票数据
-			 */
-			stockBaseDataMapper.insertOrUpdateTradeHYStockData(stockTradeDataInfos);
-		} catch (Exception e) {
-			logger.error("get trade HYStock data error:" + e.getMessage(), e);
-		}
-		logger.debug("Insert Trade HYStock data end");
-	}
 
 	/**
 	 * 获取股票交易历史数据
 	 */
-	@Async
-	public void pickerStockTradeBaseData(String code, String market, String dataType, String kType) {
+//	@Async
+	public void pickerStockTradeBaseData(String code, String market, String kType) {
 		String url = "http://pdfm2.eastmoney.com/EM_UBG_PDTI_Fast/api/js?"
 				+ "id={code}{market}&TYPE={kType}&js=(x)&rtntype=5&isCR=false&authorityType=fa&r={random}";
-		logger.debug("get Trade Base data start");
+		logger.debug(String.format("get Code:%1$s Trade Base %2$s data start", code,kType));
 		logger.debug("url:" + url);
 		try {
 			UrlDataInfo urlData = null;
@@ -257,39 +192,21 @@ public class StockDataPicker {
 				logger.debug("get Code:" + code + " trade data failed");
 				return;
 			}
-			logger.debug("get Trade Base data end");
+			logger.debug(String.format("get Code:%1$s Trade Base %2$s data end", code,kType));
 			List<String> stockTradeDataList = urlData.getData();
-			List<String> years = new ArrayList<String>();
 			List<TradeBaseDataInfo> stockTradeDataInfos = new ArrayList<TradeBaseDataInfo>();
-			LinkedHashMap<String, List<TradeBaseDataInfo>> stockTradeDataInfoMap = new LinkedHashMap<String, List<TradeBaseDataInfo>>();
-			/**
-			 * 按照年份分组数据
+			/*
+			 * 解析数据
 			 */
 			for (String stockData : stockTradeDataList) {
 				/**
 				 * "2017-10-24,8.74开,8.67收,8.76高,8.60低,31305量,2714万额,1.83%"
 				 */
 				String[] stockDatas = stockData.split(",");
-				String year = stockDatas[0].substring(0, 4);
-				/**
-				 * 2013年前数据不关注
-				 */
-				if (!(year.compareTo("2013") > 0)) {
-					continue;
-				}
-				if (!stockTradeDataInfoMap.containsKey(year)) {
-					if (stockTradeDataInfoMap.size() != 0) {
-						logger.debug("Day Trade data:" + stockTradeDataInfoMap.keySet().toString() + ":"
-								+ stockTradeDataInfos.size());
-					}
-					stockTradeDataInfos = new ArrayList<TradeBaseDataInfo>();
-					stockTradeDataInfoMap.put(year, stockTradeDataInfos);
-				}
-
 				TradeBaseDataInfo dBaseDataInfo = new TradeBaseDataInfo();
 				dBaseDataInfo.setCode(code);
 				dBaseDataInfo.setTradeDate(stockDatas[0]);
-				dBaseDataInfo.setDateType(dataType);
+				dBaseDataInfo.setDateType(kType);
 				dBaseDataInfo.setOpen(Float.parseFloat(stockDatas[1]));
 				dBaseDataInfo.setClose(Float.parseFloat(stockDatas[2]));
 				dBaseDataInfo.setHigh(Float.parseFloat(stockDatas[3]));
@@ -305,46 +222,33 @@ public class StockDataPicker {
 				} else {
 					dBaseDataInfo.setAmount(Float.parseFloat(stockDatas[6]) / 10000);
 				}
-				// dBaseDataInfo.setAmount(Float.parseFloat(stockData.get("amount").replaceAll("[\u4e00-\u9fa5]",
-				// "")));
 				dBaseDataInfo.setAmplitude(Float.parseFloat(stockDatas[7].replaceAll("[%-]", "0")));
 				stockTradeDataInfos.add(dBaseDataInfo);
 			}
-			logger.debug("Insert Trade Base data start");
-			for (String dataYear : stockTradeDataInfoMap.keySet()) {
-				String tblName = "tbl_trade_base_data";
-				logger.debug("Insert Trade data to " + tblName + "_" + dataYear);
-				/**
-				 * 创建对应年份的表
-				 */
-				if (!years.contains(dataYear)) {
-					if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-					}
-				}
-				/**
-				 * 插入基本交易数据
-				 */
-				stockBaseDataMapper.insertOrUpdateTradeBaseData(tblName + "_" + dataYear,
-						stockTradeDataInfoMap.get(dataYear));
-			}
+			
+			logger.debug(String.format("get Code:%1$s Trade Base %2$s data count:%3$d", code,kType,stockTradeDataInfos.size()));
+			logger.debug("Insert Trade data to tbl_trade_base_data start");
+			/**
+			 * 插入基本交易数据
+			 */
+			stockBaseDataMapper.insertOrUpdateTradeBaseData(stockTradeDataInfos);
+			logger.debug("Insert Trade data to tbl_trade_base_data end");
 		} catch (Exception e) {
 			logger.error("get Code:" + code + " trade data error:" + e.getMessage(), e);
 		}
-		logger.debug("Insert Trade Base data end");
 	}
 
 	/**
 	 * 获取股票交易指标数据
 	 */
-	@Async
-	public <T> T pickerStockTradeZhiBiaoData(String code, String market, String kType, String extend, String dataType,
-			Class<T> tClass) {
+//	@Async
+	public void pickerStockTradeZhiBiaoData(String code, String market, String kType, String extend,
+			ZhiBiaoData zhiBiaoData) {
 		String url = "http://pdfm2.eastmoney.com/EM_UBG_PDTI_Fast/api/js?"
 				+ "id={code}{market}&TYPE={kType}&js=(x)&rtntype=4&extend={extend}"
 				+ "&isCR=false&check=kte&authorityType=fa&r={random}";
-		logger.debug("get Trade " + extend + " data start");
-		logger.debug("url:" + url);
+		logger.debug(String.format("开始获取股票(%1$s)的(%2$s)指标(%3$s)数据", code,extend,kType));
+		logger.debug("数据接口url:" + url);
 		try {
 			List<Map<String, String>> stockTradeDataMap = null;
 
@@ -361,97 +265,40 @@ public class StockDataPicker {
 
 			if (stockTradeDataMap == null) {
 				logger.debug("get Code:" + code + " trade " + extend + " data failed");
-				return null;
+				return;
 			}
 			logger.debug("get Trade " + extend + " data end");
-			List<String> years = new ArrayList<String>();
-			List<T> tradeDataInfos = new ArrayList<T>();
-			LinkedHashMap<String, List<T>> stockTradeDataInfoMap = new LinkedHashMap<String, List<T>>();
-			/**
-			 * 按照年份分组数据
-			 */
-			for (Map<String, String> stockData : stockTradeDataMap) {
-
-				String year = stockData.get("time").substring(0, 4);
-				/**
-				 * 2013年前数据不关注
-				 */
-				if (!(year.compareTo("2013") > 0)) {
-					continue;
-				}
-				if (!stockTradeDataInfoMap.containsKey(year)) {
-					if (stockTradeDataInfoMap.size() != 0) {
-						logger.debug("Day Trade data:" + stockTradeDataInfoMap.keySet().toString() + ":"
-								+ tradeDataInfos.size());
-					}
-					tradeDataInfos = new ArrayList<T>();
-					stockTradeDataInfoMap.put(year, tradeDataInfos);
-				}
+			List<ZhiBiaoData> tradeDataInfos = new ArrayList<ZhiBiaoData>();
+			
+			for (Map<String, String> stockData : stockTradeDataMap) {				
 				/**
 				 * {"time":"2010-11-18","open":"5.27","close":"4.92",
 				 * "high":"5.39","low":"4.86","volume":"69760","amount":"2.42亿",
 				 * "amplitude":"9.78%"}
 				 */
-				T tradeDataInfo = tClass.newInstance();
-				tClass.getMethod("setCode", String.class).invoke(tradeDataInfo, code);
-				tClass.getMethod("setTradeDate", String.class).invoke(tradeDataInfo, stockData.get("time"));
-				tClass.getMethod("setDateType", String.class).invoke(tradeDataInfo, dataType);
-				switch (ZhiBiaoEnum.getZhiBiaoEnum(extend)) {
+				tradeDataInfos.add(zhiBiaoData.build(code, stockData.get("time"),kType, stockData.get(extend)));
+			}
+			logger.debug(String.format("Insert Trade %1$s data count:%2$d start", extend,tradeDataInfos.size()));			
+			switch (ZhiBiaoEnum.getZhiBiaoEnum(extend)) {
 				case cma:
-					String[] cmas = stockData.get(extend).replaceAll("[^\\d\\.\\-,]", "").replaceAll("-", "0")
-							.split(",");
-					tClass.getMethod("setMA5", float.class).invoke(tradeDataInfo, Float.parseFloat(cmas[0]));
-					tClass.getMethod("setMA10", float.class).invoke(tradeDataInfo, Float.parseFloat(cmas[1]));
-					tClass.getMethod("setMA20", float.class).invoke(tradeDataInfo, Float.parseFloat(cmas[2]));
-					tClass.getMethod("setMA30", float.class).invoke(tradeDataInfo, Float.parseFloat(cmas[3]));
+					stockBaseDataMapper.insertOrUpdateTradeCMAData(tradeDataInfos);
 					break;
 				case macd:
-					String[] macds = stockData.get(extend).replaceAll("[^\\d\\.\\-,]", "").split(",");
-					tClass.getMethod("setDIFF", float.class).invoke(tradeDataInfo, Float.parseFloat(macds[0]));
-					tClass.getMethod("setDEA", float.class).invoke(tradeDataInfo, Float.parseFloat(macds[1]));
-					tClass.getMethod("setMACD", float.class).invoke(tradeDataInfo, Float.parseFloat(macds[2]));
+					stockBaseDataMapper.insertOrUpdateTradeMACDData(tradeDataInfos);
 					break;
-
+				case boll:
+					stockBaseDataMapper.insertOrUpdateTradeBollData(tradeDataInfos);
+					break;
 				default:
 					break;
-				}
-				tradeDataInfos.add(tradeDataInfo);
 			}
-			logger.debug("Insert Trade " + extend + " data start");
-			for (String dataYear : stockTradeDataInfoMap.keySet()) {
-				String tblName = "tbl_trade_" + extend + "_data";
-				logger.debug("Insert Trade data to " + tblName + "_" + dataYear);
-				/**
-				 * 创建对应年份的表
-				 */
-				if (!years.contains(dataYear)) {
-					if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-					}
-				}
-				/**
-				 * 插入基本交易数据
-				 */
-				switch (ZhiBiaoEnum.getZhiBiaoEnum(extend)) {
-				case cma:
-					stockBaseDataMapper.insertOrUpdateTradeCMAData(tblName + "_" + dataYear,
-							stockTradeDataInfoMap.get(dataYear));
-					break;
-				case macd:
-					stockBaseDataMapper.insertOrUpdateTradeMACDData(tblName + "_" + dataYear,
-							stockTradeDataInfoMap.get(dataYear));
-					break;
+			logger.debug("Insert Trade " + extend + " data end");
+			
 
-				default:
-					break;
-				}
-
-			}
 		} catch (Exception e) {
 			logger.error("get Code:" + code + " trade " + extend + " error:" + e.getMessage(), e);
 		}
-		logger.debug("Insert Trade " + extend + " data end");
-		return null;
+		return;
 	}
 
 	/**
@@ -473,7 +320,7 @@ public class StockDataPicker {
 	/**
 	 * 获取股票历史资金数据
 	 */
-	@Async
+//	@Async
 	public void pickerStockZJLSData(String code, String market) {
 		String url = "http://ff.eastmoney.com/EM_CapitalFlowInterface/api/js?"
 				+ "type=hff&rtntype=2&js=(x)&cb=&check=TMLBMSPROCR"
@@ -497,129 +344,97 @@ public class StockDataPicker {
 				logger.debug("get Code:" + code + " day trade ZJLS data failed");
 				return;
 			}
-			List<String> years = new ArrayList<String>();
-			LinkedHashMap<String, List<TradeZJLSDataInfo>> stockTradeDataInfoMap = new LinkedHashMap<String, List<TradeZJLSDataInfo>>();
+			
 			List<TradeZJLSDataInfo> stockTradeDataInfos = new ArrayList<TradeZJLSDataInfo>();
 			/**
-			 * 按照年份分组数据
+			 * 解析数据
 			 */
 			for (String data : stockTradeZJLSDatas) {
 				data = data.replaceAll("%", "").trim();
 				String[] datas = data.split(",");
-				String year = datas[0].substring(0, 4);
-				if (!stockTradeDataInfoMap.containsKey(year)) {
-					if (stockTradeDataInfoMap.size() != 0) {
-						logger.debug("Day Trade data:" + stockTradeDataInfoMap.keySet().toString() + ":"
-								+ stockTradeDataInfos.size());
-					}
-					stockTradeDataInfos = new ArrayList<TradeZJLSDataInfo>();
-					stockTradeDataInfoMap.put(year, stockTradeDataInfos);
-				}
 				/**
 				 * 股票代码，交易日，净流入额，净流入占比（主力：超大单：大单：中单：小单），收盘价，涨跌幅
 				 */
 				TradeZJLSDataInfo tradeZJLSDataInfo = new TradeZJLSDataInfo();
 				tradeZJLSDataInfo.setCode(code);
 				tradeZJLSDataInfo.setTradeDate(datas[0]);
-				tradeZJLSDataInfo.setDateType("day");
-				tradeZJLSDataInfo.setZhuInflows(Float.parseFloat(datas[1]));
-				tradeZJLSDataInfo.setZhuInflowsRatio(Float.parseFloat(datas[2]));
-				tradeZJLSDataInfo.setChaoInflows(Float.parseFloat(datas[3]));
-				tradeZJLSDataInfo.setChaoInflowsRatio(Float.parseFloat(datas[4]));
-				tradeZJLSDataInfo.setDaInflows(Float.parseFloat(datas[5]));
-				tradeZJLSDataInfo.setDaInflowsRatio(Float.parseFloat(datas[6]));
-				tradeZJLSDataInfo.setZhongInflows(Float.parseFloat(datas[7]));
-				tradeZJLSDataInfo.setZhongInflowsRatio(Float.parseFloat(datas[8]));
-				tradeZJLSDataInfo.setXiaoInflows(Float.parseFloat(datas[9]));
-				tradeZJLSDataInfo.setXiaoInflowsRatio(Float.parseFloat(datas[10]));
-				tradeZJLSDataInfo.setClosing(Float.parseFloat(datas[11]));
-				tradeZJLSDataInfo.setChg(Float.parseFloat(datas[12]));
+				tradeZJLSDataInfo.setDateType("K");
+				tradeZJLSDataInfo.setZhuInflows(Float.parseFloat("-".equals(datas[1]) ? "0" : datas[1]));
+				tradeZJLSDataInfo.setZhuInflowsRatio(Float.parseFloat("-".equals(datas[2]) ? "0" : datas[2]));
+				tradeZJLSDataInfo.setChaoInflows(Float.parseFloat("-".equals(datas[3]) ? "0" : datas[3]));
+				tradeZJLSDataInfo.setChaoInflowsRatio(Float.parseFloat("-".equals(datas[4]) ? "0" : datas[4]));
+				tradeZJLSDataInfo.setDaInflows(Float.parseFloat("-".equals(datas[5]) ? "0" : datas[5]));
+				tradeZJLSDataInfo.setDaInflowsRatio(Float.parseFloat("-".equals(datas[6]) ? "0" : datas[6]));
+				tradeZJLSDataInfo.setZhongInflows(Float.parseFloat("-".equals(datas[7]) ? "0" : datas[7]));
+				tradeZJLSDataInfo.setZhongInflowsRatio(Float.parseFloat("-".equals(datas[8]) ? "0" : datas[8]));
+				tradeZJLSDataInfo.setXiaoInflows(Float.parseFloat("-".equals(datas[9]) ? "0" : datas[9]));
+				tradeZJLSDataInfo.setXiaoInflowsRatio(Float.parseFloat("-".equals(datas[10]) ? "0" : datas[10]));
+				tradeZJLSDataInfo.setClosing(Float.parseFloat("-".equals(datas[11]) ? "0" : datas[11]));
+				tradeZJLSDataInfo.setChg(Float.parseFloat("-".equals(datas[12]) ? "0" : datas[12]));
+				tradeZJLSDataInfo.setWs(DateUtil.getWeekdayIndex(datas[0]));
 				stockTradeDataInfos.add(tradeZJLSDataInfo);
 			}
-			for (String dataYear : stockTradeDataInfoMap.keySet()) {
-				String tblName = "tbl_trade_zjls_data";
-				logger.debug("Insert Trade ZJLS data:" + tblName + "_" + dataYear);
-				/**
-				 * 创建对应年份的表
-				 */
-				if (!years.contains(dataYear)) {
-					if (stockBaseDataMapper.getStockTradeTblCount(tblName + "_" + dataYear) == 0) {
-						stockBaseDataMapper.createStockTradeTbl(tblName, dataYear);
-					}
-				}
-				/**
-				 * 插入基本交易数据
-				 */
-				stockBaseDataMapper.insertOrUpdateTradeZJLSData(tblName + "_" + dataYear,
-						stockTradeDataInfoMap.get(dataYear));
-			}
-		} catch (
-
-		Exception e) {
+			
+			/**
+			 * 插入历史资金数据
+			 */
+			stockBaseDataMapper.insertOrUpdateTradeZJLSData(stockTradeDataInfos);
+		} catch (Exception e) {
 			logger.error("get Code:" + code + " trade data error:" + e.getMessage(), e);
 		}
 		logger.debug("Insert code " + code + " Trade ZJLS data end");
 	}
 
 	/**
-	 * 获取行业股票投资评级数据
+	 * 计算股票资金数据
 	 */
-//	@Async
-	public void pickerHYStocCTData(String hyCode) {		
-		String url = "http://nufm.dfcfw.com/EM_Finance2014NumericApplication/JS.aspx?type=CT&cmd=C.{hyCode}1"
-		+ "&sty=GEMCPF&st=(BNum)&sr=-1&p=1&ps=500&cb=&js=[(x)]&token=3a965a43f705cf1d9ad7e1a3e429d622&rt=50318324";
-		logger.debug("url:" + url);
+	public void calZJData(String code) {
+
+		logger.debug("cal Code:{} ZJ data start",code);
 		try {
-			logger.debug("get hyCode:" + hyCode + " CT data from url start");
-			List<String> stockCTDataList = null;
-			try {
-				logger.debug("get hyCode:" + hyCode + " CT data.");
-				String stockCTDataJson = httpUtil.getUrlStr(url, hyCode);
-				stockCTDataList = JacksonJsonUtil.json2GenericObject(stockCTDataJson,
-						new TypeReference<List<String>>() {
-						});
-			} catch (Exception e) {
-				logger.error("json2Object error:" + e.getMessage(), e);
-			}
-			if (stockCTDataList == null || stockCTDataList.isEmpty()) {
-				logger.warn("get hyCode:" + hyCode + " CT data failed.");
-				return;
-			}
-			logger.debug("get hyCode:" + hyCode + " CT data from url end");
-
-			List<Map<String, Object>> stockCTDataInfos = new ArrayList<Map<String, Object>>();
-
 			/**
-			 * 解析行业股票投资评级数据
+			 * 计算资金数据
 			 */
-			for (String data : stockCTDataList) {
-				String[] datas = data.split(",");
-				if (datas[1].startsWith("9") || datas[1].startsWith("2")) {
-					continue;
-				}
-				Map<String, Object> stockCTDataInfo = new HashMap<String,Object>();
-				stockCTDataInfo.put("code",datas[1]);
-				if (datas[5].contains("-")) {
-					continue;
-				}
-				stockCTDataInfo.put("yanbaoshu",Integer.parseInt(datas[5]));
-				stockCTDataInfo.put("mairu",Integer.parseInt(datas[6]));
-				stockCTDataInfo.put("zengchi",Integer.parseInt(datas[7]));
-				stockCTDataInfo.put("zhongxing",Integer.parseInt(datas[8]));
-				stockCTDataInfo.put("jianchi",Integer.parseInt(datas[9]));
-				stockCTDataInfo.put("maichu",Integer.parseInt(datas[10]));
-				stockCTDataInfos.add(stockCTDataInfo);
-			}
-
-			logger.debug("Insert HYStock CT data start");
-
-			/**
-			 * 插入行业股票投资评级数据
-			 */
-			stockBaseDataMapper.insertOrUpdateStockCTData(stockCTDataInfos);
+			logger.debug("cal Code:{} ZJ data affectRows: {}",code ,stockBaseDataMapper.calZJData(code));
 		} catch (Exception e) {
-			logger.error("get HYStock CT data error:" + e.getMessage(), e);
+			logger.error("cal Code:" + code + " ZJ data error:" + e.getMessage(), e);
 		}
-		logger.debug("Insert HYStock CT data end");
+		logger.debug("cal Code:{} ZJ data end",code);
+	}
+	
+	/**
+	 * 采集股票基础数据
+	 * @param code
+	 * @param market
+	 */
+	public void pickerStockBaseData(String code, String market) {
+
+		String dataTypes = "K|WK|MK";
+		String zhiBiaoTypes = "cma|macd|boll";
+
+		// logger.debug("start get " + code + " day Trade real data ");
+		// stockDataPicker.pickerStockTradeRealData(code, market);
+
+		logger.debug(String.format("采集股票(%1$s)所有数据开始 ", code));
+		// 采集股票K线数据
+		for (String dataType : dataTypes.split("[|]")) {
+			logger.debug(String.format("开始采集股票(%1$s) %2$s线数据 ", code, dataType));
+			pickerStockTradeBaseData(code, market, dataType);
+		}
+
+		// 采集股票各指标数据
+		for (String zhiBiaoType : zhiBiaoTypes.split("[|]")) {
+			for (String dataType : dataTypes.split("[|]")) {
+				logger.debug(String.format("开始采集股票(%1$s) %2$s %3$s线数据 ", code, zhiBiaoType, dataType));
+				pickerStockTradeZhiBiaoData(code, market, dataType, zhiBiaoType, ZhiBiaoDataFactory.build(zhiBiaoType));
+			}
+		}
+
+		// 采集股票历史资金数据
+		pickerStockZJLSData(code, market);
+		// 计算股票历史资金数据
+		calZJData(code);
+
+		logger.debug(String.format("采集股票(%1$s)所有数据完成 ", code));
 	}
 }

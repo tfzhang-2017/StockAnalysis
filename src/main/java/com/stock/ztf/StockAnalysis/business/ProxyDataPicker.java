@@ -19,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.stock.ztf.StockAnalysis.beans.ProxyData;
@@ -31,7 +32,7 @@ import com.stock.ztf.StockAnalysis.utils.FnUtils;
  * @author ztf
  *
  */
-@Component
+@Service
 public class ProxyDataPicker {
 
 	private final static Logger logger = LoggerFactory.getLogger(ProxyDataPicker.class);

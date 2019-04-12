@@ -20,5 +20,7 @@ public interface StockDataAnalysisMapper {
 	int insertOrUpdateAnalysisData(Map<String, Object> datas);
 	
 	int insertOrUpdateAnalysisDatas(@Param("datas") List<Map<String, Object>> datas);
+	
+	int insertOrUpdateStockShouYiData(Map<String, Object> datas);
 
 }

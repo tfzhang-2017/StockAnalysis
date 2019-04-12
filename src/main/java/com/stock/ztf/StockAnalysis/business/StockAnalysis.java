@@ -4,21 +4,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.*;
-import java.util.function.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import com.stock.ztf.StockAnalysis.mappers.StockDataAnalysisMapper;
 import com.stock.ztf.StockAnalysis.utils.FnUtils;
 
-@RestController
-@RequestMapping("/analysis")
+@Service
 public class StockAnalysis {
 
 	private final static Logger logger = LoggerFactory.getLogger(StockAnalysis.class);
@@ -278,8 +274,7 @@ public class StockAnalysis {
 	}
 
 	/**
-	 * MA分析
-	 * 
+	 * 根据MA分析股票，并将结果记入数据库
 	 * @param year
 	 * @param dType
 	 * @param code
@@ -294,6 +289,7 @@ public class StockAnalysis {
 		for (String y : years) {
 			stockDatas.addAll(stockDataAnalysisMapper.getTradeCMAData(y, dType, code));
 		}
+		
 		logger.debug("get code:"+code+" stockDatas " + stockDatas.size() + " records");
 		/**
 		 * 计算每日股价涨跌幅、MA5的涨跌幅
@@ -469,5 +465,191 @@ public class StockAnalysis {
 		zuihouData.put("dateCount", tdateList.size());
 		return zuihouData;
 		// System.out.println("------------------------------根据MA5变化率统计------------------------------");
+	}
+	
+	/**
+	 * 根据MA变化率买卖股票，并打印收益
+	 * @param year
+	 * @param dType
+	 * @param code
+	 * @return Map<String, Object>
+	 */
+	@Async
+	synchronized public void cal_stockShouYiByCma(String year, String dType, String code) {
+		String retStr = "";
+		String retStatus = "";
+		List<Map<String, Object>> stockDatas = new ArrayList<Map<String, Object>>();
+		String[] years = year.split(",");
+		for (String y : years) {
+			stockDatas.addAll(stockDataAnalysisMapper.getTradeCMAData(y, dType, code));
+		}
+		
+		logger.debug("get code:"+code+" stockDatas " + stockDatas.size() + " records");
+		/**
+		 * 计算每日股价涨跌幅、MA5的涨跌幅
+		 */
+		for (int i = 0; i < stockDatas.size(); i++) {
+			Map<String, Object> nowStockData = stockDatas.get(i);
+			if (i != 0) {
+				Map<String, Object> prevStockData = stockDatas.get(i - 1);
+				/**
+				 * 前一日收盘价
+				 */
+				float prevClose = (float) prevStockData.get("close");
+				/**
+				 * 今日收盘价
+				 */
+				float curClose = (float) nowStockData.get("close");
+				/*
+				 * 今日跌停价
+				 */
+				float dieClose = FnUtils.floatRound(prevClose-prevClose*0.1f,2);
+				nowStockData.put("dieClose", dieClose);
+				/*
+				 * 今日涨停价
+				 */
+				float zhangClose = FnUtils.floatRound(prevClose+prevClose*0.1f,2);
+				nowStockData.put("zhangClose", zhangClose);
+				/*
+				 * 今日中间价
+				 */
+				float zhongClose = (prevClose+curClose)/2;
+				nowStockData.put("zhongClose", zhongClose);
+				
+				/**
+				 * 计算MA5的涨跌幅
+				 */
+			
+				float ma5Change = ((float) nowStockData.get("MA5") - (float) prevStockData.get("MA5")) * 100
+						/ (float) prevStockData.get("MA5");
+				nowStockData.put("ma5Change", ma5Change);
+				if (curClose>=zhangClose) {
+					nowStockData.put("zhangTing", 1);
+				}else{
+					nowStockData.put("zhangTing", 0);
+				}
+				if (curClose<=dieClose) {
+					nowStockData.put("dieTing", 1);
+				}else {
+					nowStockData.put("dieTing", 0);
+				}
+			} else {
+				/*
+				 * 处理上市当天数据
+				 */
+				nowStockData.put("ma5Change", 0.0f);
+				nowStockData.put("zhangTing", 1);
+				nowStockData.put("dieTing", 1);
+			}
+
+		}
+		/**
+		 * 根据MA5涨跌幅统计股价涨跌幅
+		 */
+		List<Map<String, Object>> tongjiMA5Change = new ArrayList<Map<String, Object>>();
+		Map<String, Object> changeMap = new HashMap<String, Object>();
+		boolean isZheng = true;
+		boolean ma5Zheng = true;
+		for (Map<String, Object> stockData : stockDatas) {
+			int zhangTing=(int)stockData.get("zhangTing");
+			int dieTing=(int)stockData.get("dieTing");
+			if (changeMap.isEmpty()) {
+				/*
+				 * 涨跌停处理
+				 */
+				if (zhangTing==1||dieTing==1) {
+					continue;
+				}
+				/*
+				 * 处理第一个数据
+				 */
+				isZheng = ((float) stockData.get("ma5Change")) > 0;
+				changeMap.put("isZheng", isZheng);
+				changeMap.put("dateList", new ArrayList<String>() {
+					{
+						add(stockData.get("tradeDate").toString());
+					}
+				});
+				changeMap.put("ma5Changes", new ArrayList<Float>() {
+					{
+						add((float) stockData.get("ma5Change"));
+					}
+				});
+				changeMap.put("maiRuJia", (float) stockData.get("close"));
+				changeMap.put("maiChuJia", (float) stockData.get("close"));
+				changeMap.put("startDate", (String) stockData.get("tradeDate"));
+				changeMap.put("endDate", (String) stockData.get("tradeDate"));
+			} else {
+
+				ma5Zheng = (float) stockData.get("ma5Change") > 0;
+				if (ma5Zheng == isZheng) {
+					/**
+					 * 同向涨跌幅相加
+					 */
+					((List<String>) (changeMap.get("dateList"))).add(stockData.get("tradeDate").toString());
+					((List<Float>) (changeMap.get("ma5Changes"))).add((float) stockData.get("ma5Change"));
+					changeMap.replace("endDate", (String) stockData.get("tradeDate"));
+				} else {
+					/*
+					 * 涨跌停处理
+					 */
+					if (zhangTing==1||dieTing==1) {
+						continue;
+					}
+					/*
+					 * 记录卖出价
+					 */
+					changeMap.replace("maiChuJia", (float) stockData.get("close"));
+					changeMap.replace("endDate", (String) stockData.get("tradeDate"));
+					tongjiMA5Change.add(changeMap);
+					changeMap = new HashMap<String, Object>();
+					isZheng = ((float) stockData.get("ma5Change")) > 0;
+					changeMap.put("isZheng", isZheng);
+					changeMap.put("dateList", new ArrayList<String>() {
+						{
+							add(stockData.get("tradeDate").toString());
+						}
+					});
+					changeMap.put("ma5Changes", new ArrayList<Float>() {
+						{
+							add((float) stockData.get("ma5Change"));
+						}
+					});
+					changeMap.put("maiRuJia", (float) stockData.get("close"));
+					changeMap.put("maiChuJia", (float) stockData.get("close"));
+					changeMap.put("startDate", (String) stockData.get("tradeDate"));
+					changeMap.put("endDate", (String) stockData.get("tradeDate"));
+				}
+			}			
+		}
+		tongjiMA5Change.add(changeMap);
+		/*
+		 * 打印收益结果
+		 */
+		logger.debug("get code:"+code+" tongjiMA5Change " + tongjiMA5Change.size() + " records");
+		for (Map<String, Object> cMap : tongjiMA5Change) {
+			float maiRuJia=(float)cMap.get("maiRuJia");
+			float maiChuJia=(float)cMap.get("maiChuJia");
+			isZheng=(boolean) cMap.get("isZheng");
+			List<String> dateList=((List<String>) (cMap.get("dateList")));
+			float shouYiLv=(float) java.lang.StrictMath.pow(maiChuJia/maiRuJia, 1.0/dateList.size());
+			if (isZheng) {
+				shouYiLv=FnUtils.floatRound((shouYiLv-1)*100*dateList.size(), 2);
+			} else {
+				shouYiLv=FnUtils.floatRound((1-shouYiLv)*100*dateList.size(), 2);
+			}
+			cMap.put("code", code);
+			cMap.put("shouYiLv", shouYiLv);
+			cMap.put("dateCount", dateList.size());
+//			System.out.println(
+//					"code:"+code+
+//					":shouYiLv:"+shouYiLv+
+//					":isZheng:"+cMap.get("isZheng")+
+//					":maiRuJia:"+cMap.get("maiRuJia")+
+//					":maiChuJia:"+cMap.get("maiChuJia")+
+//					":startDate:"+cMap.get("startDate")+
+//					":endDate:"+cMap.get("endDate"));
+			stockDataAnalysisMapper.insertOrUpdateStockShouYiData(cMap);
+		}					
 	}
 }

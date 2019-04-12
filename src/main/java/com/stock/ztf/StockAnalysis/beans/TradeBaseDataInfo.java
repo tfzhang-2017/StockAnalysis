@@ -4,7 +4,7 @@ public class TradeBaseDataInfo {
 
 	private String code;
 	private String tradeDate;
-	private String dateType;
+	private String dataType;
 	private float open;
 	private float close;
 	private float high;
@@ -24,11 +24,11 @@ public class TradeBaseDataInfo {
 	public void setTradeDate(String tradeDate) {
 		this.tradeDate = tradeDate;
 	}
-	public String getDateType() {
-		return dateType;
+	public String getDataType() {
+		return dataType;
 	}
-	public void setDateType(String dateType) {
-		this.dateType = dateType;
+	public void setDateType(String dataType) {
+		this.dataType = dataType;
 	}
 	public float getOpen() {
 		return open;

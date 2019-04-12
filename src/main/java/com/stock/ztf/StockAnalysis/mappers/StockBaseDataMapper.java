@@ -19,17 +19,19 @@ public interface StockBaseDataMapper {
 
 	int getStockTradeTblCount(@Param("tblName") String tblName);
 
-	int insertOrUpdateTradeBaseData(@Param("tblName") String tblName, @Param("datas") List<TradeBaseDataInfo> datas);
+	int insertOrUpdateTradeBaseData(@Param("datas") List<TradeBaseDataInfo> datas);
 
 	int insertOrUpdateStockCode(@Param("code") String code, @Param("zhName") String zhName);
 
-	int createStockTradeTbl(@Param("tblName") String tblName, @Param("year") String year);
+	int createStockTradeTbl(@Param("tblName") String tblName);
 
-	int insertOrUpdateTradeZJLSData(@Param("tblName") String tblName, @Param("datas") List<TradeZJLSDataInfo> datas);
+	int insertOrUpdateTradeZJLSData(@Param("datas") List<TradeZJLSDataInfo> datas);
 	
-	int insertOrUpdateTradeCMAData(@Param("tblName") String tblName, @Param("datas") List<?> datas);
+	int insertOrUpdateTradeCMAData(@Param("datas") List<?> datas);
 	
-	int insertOrUpdateTradeMACDData(@Param("tblName") String tblName, @Param("datas") List<?> datas);
+	int insertOrUpdateTradeMACDData(@Param("datas") List<?> datas);
+	
+	int insertOrUpdateTradeBollData(@Param("datas") List<?> datas);
 	
 	int insertOrUpdateTradeMRHYData(@Param("datas") List<?> datas);
 	
@@ -38,5 +40,7 @@ public interface StockBaseDataMapper {
 	List<String> getHYCode();
 	
 	int insertOrUpdateStockCTData(@Param("datas") List<?> datas);
+	
+	int calZJData(@Param("code") String code);
 
 }

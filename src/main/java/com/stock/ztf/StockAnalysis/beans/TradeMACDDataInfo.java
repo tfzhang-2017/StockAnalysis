@@ -1,47 +1,42 @@
 package com.stock.ztf.StockAnalysis.beans;
 
-public class TradeMACDDataInfo {
-
-	private String code;
-	private String tradeDate;
-	private String dateType;
-	private float DIFF;
-	private float DEA;
-	private float MACD;
-	public String getCode() {
-		return code;
+public class TradeMACDDataInfo extends ZhiBiaoData {
+	
+	private float diff;
+	private float dea;
+	private float macd;
+	
+	public float getDiff() {
+		return diff;
 	}
-	public void setCode(String code) {
-		this.code = code;
+	public void setDiff(float diff) {
+		this.diff = diff;
 	}
-	public String getTradeDate() {
-		return tradeDate;
+	public float getDea() {
+		return dea;
 	}
-	public void setTradeDate(String tradeDate) {
-		this.tradeDate = tradeDate;
+	public void setDea(float dea) {
+		this.dea = dea;
 	}
-	public String getDateType() {
-		return dateType;
+	public float getMacd() {
+		return macd;
 	}
-	public void setDateType(String dateType) {
-		this.dateType = dateType;
+	public void setMacd(float macd) {
+		this.macd = macd;
 	}
-	public float getDIFF() {
-		return DIFF;
+	
+	@Override
+	public ZhiBiaoData build(String code, String tradeDate, String dataType, String dataStr) {
+		TradeMACDDataInfo tradeMACDDataInfo = new TradeMACDDataInfo();
+		String[] macds = dataStr.replaceAll("[^\\d\\.\\-,]", "").split(",");
+		tradeMACDDataInfo.setCode(code);
+		tradeMACDDataInfo.setTradeDate(tradeDate);
+		tradeMACDDataInfo.setDataType(dataType);
+		tradeMACDDataInfo.setDiff( Float.parseFloat(macds[0]));
+		tradeMACDDataInfo.setDea( Float.parseFloat(macds[1]));
+		tradeMACDDataInfo.setMacd( Float.parseFloat(macds[2]));
+		return tradeMACDDataInfo;
 	}
-	public void setDIFF(float dIFF) {
-		DIFF = dIFF;
-	}
-	public float getDEA() {
-		return DEA;
-	}
-	public void setDEA(float dEA) {
-		DEA = dEA;
-	}
-	public float getMACD() {
-		return MACD;
-	}
-	public void setMACD(float mACD) {
-		MACD = mACD;
-	}
+	
+	
 }

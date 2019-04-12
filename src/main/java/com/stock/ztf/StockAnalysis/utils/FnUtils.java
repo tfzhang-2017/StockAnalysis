@@ -1,11 +1,17 @@
 package com.stock.ztf.StockAnalysis.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -114,4 +120,44 @@ public class FnUtils {
 		}
         return rets;
     }
+	/**
+	 * 四舍五入，保留两位小数
+	 * @param f
+	 * @return
+	 */
+	public static float floatRound(float f,int n){
+		  BigDecimal b = new BigDecimal(f);
+		  //   b.setScale(2, BigDecimal.ROUND_HALF_UP)   表明四舍五入，保留两位小数
+		  return b.setScale(n, BigDecimal.ROUND_HALF_UP).floatValue();  
+	}
+	
+	public static float strToFloat(String str){
+		if(null != str && !str.isEmpty() && !str.trim().equals("-")){
+			return Float.parseFloat(str);
+		}else{
+			return 0f;
+		}
+	}
+	
+	public static void main(String[] args) throws ParseException {
+//		System.out.println(floatRound(12.34f*0.1f,2));
+		
+		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        String str = "2019-3-7";
+        Date date = dateFormatter.parse(str);
+        dateFormatter.applyPattern("D");//
+        System.out.println("一年中的第几天：" + dateFormatter.format(date));
+
+        dateFormatter.applyPattern("d");
+        System.out.println("一个月中的第几天：" + dateFormatter.format(date));
+
+        dateFormatter.applyPattern("w");
+        System.out.println("一年中的第几周：" + dateFormatter.format(date));
+
+        dateFormatter.applyPattern("W");
+        System.out.println("一个月中的第几周：" + dateFormatter.format(date));
+
+        dateFormatter.applyPattern("E");
+        System.out.println("一个星期中的天数：" + dateFormatter.format(date));
+	}
 }

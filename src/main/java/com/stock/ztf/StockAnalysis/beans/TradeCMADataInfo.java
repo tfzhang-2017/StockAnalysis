@@ -1,32 +1,12 @@
 package com.stock.ztf.StockAnalysis.beans;
 
-public class TradeCMADataInfo {
+public class TradeCMADataInfo extends ZhiBiaoData {
 
-	private String code;
-	private String tradeDate;
-	private String dateType;
 	private float MA5;
 	private float MA10;
 	private float MA20;
 	private float MA30;
-	public String getCode() {
-		return code;
-	}
-	public void setCode(String code) {
-		this.code = code;
-	}
-	public String getTradeDate() {
-		return tradeDate;
-	}
-	public void setTradeDate(String tradeDate) {
-		this.tradeDate = tradeDate;
-	}
-	public String getDateType() {
-		return dateType;
-	}
-	public void setDateType(String dateType) {
-		this.dateType = dateType;
-	}
+	
 	public float getMA5() {
 		return MA5;
 	}
@@ -50,5 +30,20 @@ public class TradeCMADataInfo {
 	}
 	public void setMA30(float mA30) {
 		MA30 = mA30;
+	}
+	
+	@Override
+	public ZhiBiaoData build(String code, String tradeDate, String dataType, String dataStr) {
+		TradeCMADataInfo tradeDataInfo = new TradeCMADataInfo();
+		String[] cmas = dataStr.replaceAll("[^\\d\\.\\-,]", "").replaceAll("-", "0").split(",");
+		tradeDataInfo.setCode(code);
+		tradeDataInfo.setTradeDate(tradeDate);
+		tradeDataInfo.setDataType(dataType);
+		tradeDataInfo.setMA5( Float.parseFloat(cmas[0]));
+		tradeDataInfo.setMA10( Float.parseFloat(cmas[1]));
+		tradeDataInfo.setMA20( Float.parseFloat(cmas[2]));
+		tradeDataInfo.setMA30( Float.parseFloat(cmas[3]));
+		return tradeDataInfo;
 	}	
+		
 }

@@ -65,7 +65,7 @@ public class HttpUtil {
         HttpEntity<JSONObject> entity = new HttpEntity<JSONObject>(headers);
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setReadTimeout(60*1000);//ms
-      	factory.setConnectTimeout(60*1000);//ms      	
+      	factory.setConnectTimeout(60*1000);//ms     
         String urlRet =null;
         int flag=0;
         while (urlRet == null ||urlRet.isEmpty()) {

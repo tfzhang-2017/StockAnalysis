@@ -1,4 +1,4 @@
-package com.stock.ztf.StockAnalysis.business;
+package com.stock.ztf.StockAnalysis.task;
 
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
@@ -16,16 +16,17 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.stock.ztf.StockAnalysis.business.StockAnalysis;
 import com.stock.ztf.StockAnalysis.mappers.StockDataAnalysisMapper;
 import com.stock.ztf.StockAnalysis.utils.FileUtils;
 import com.stock.ztf.StockAnalysis.utils.SendMail;
 
-@RestController
-@RequestMapping("/analysis")
+@Service
 public class StockAnalysisTask {
 
 	private final static Logger logger = LoggerFactory.getLogger(StockAnalysisTask.class);
@@ -62,12 +63,31 @@ public class StockAnalysisTask {
 	}
 	
 	/**
+	 * 打印分析结果
+	 * @param year
+	 * @param dType
+	 * @return String
+	 */
+	//@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
+	public String cal_stockShouYiByCma() {
+		String retStr = "";
+		List<Map<String, Object>> codeDatas = stockDataAnalysisMapper.getHYStockCodeData("^0|^6");
+		for (Map<String, Object> map : codeDatas) {
+			String code = map.get("code").toString();//code="002800";
+			logger.debug("analysis " + code + " trade data start");
+			stockAnalysis.cal_stockShouYiByCma("2016,2017", "day", code);
+			logger.debug("analysis " + code + " trade data end");
+		}
+		return retStr;
+	}
+	
+	/**
 	 * 打印行业分析结果
 	 * @param year
 	 * @param dType
 	 * @return String
 	 */
-	@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
+//	@Scheduled(initialDelay = 5 * oneSecond, fixedRate = 3000 * oneMinute)
 	public String HYCMAAnalysis() {
 		String retStr = "";
 		List<String> codeDatas = stockDataAnalysisMapper.getHYCodeData();

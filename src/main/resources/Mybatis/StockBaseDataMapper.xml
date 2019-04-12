@@ -39,6 +39,7 @@
 				`code` regexp #{condition}
 			</if>
 		</where>
+		group by code
 	</select>
 
 	<select id="getStockTradeTblCount" resultType="int">
@@ -48,13 +49,13 @@
 	</select>
 
 	<insert id="insertOrUpdateTradeBaseData">
-		INSERT INTO ${tblName}
+		INSERT INTO tbl_trade_base_data
 		VALUES
 		<foreach collection="datas" item="item" index="index"
 			separator=",">
 			(#{item.code},
 			#{item.tradeDate},
-			#{item.dateType},
+			#{item.dataType},
 			#{item.open},
 			#{item.close},
 			#{item.high},
@@ -71,13 +72,13 @@
 	</insert>
 
 	<insert id="insertOrUpdateTradeCMAData">
-		INSERT INTO ${tblName}
+		INSERT INTO tbl_trade_cma_data
 		VALUES
 		<foreach collection="datas" item="item" index="index"
 			separator=",">
 			(#{item.code},
 			#{item.tradeDate},
-			#{item.dateType},
+			#{item.dataType},
 			#{item.MA5},
 			#{item.MA10},
 			#{item.MA20},
@@ -90,30 +91,48 @@
 	</insert>
 
 	<insert id="insertOrUpdateTradeMACDData">
-		INSERT INTO ${tblName}
+		INSERT INTO tbl_trade_macd_data
 		VALUES
 		<foreach collection="datas" item="item" index="index"
 			separator=",">
 			(#{item.code},
 			#{item.tradeDate},
-			#{item.dateType},
-			#{item.DIFF},
-			#{item.DEA},
-			#{item.MACD})
+			#{item.dataType},
+			#{item.diff},
+			#{item.dea},
+			#{item.macd})
 		</foreach>
 		ON DUPLICATE KEY
 		UPDATE
-		DIFF=VALUES(DIFF),DEA=VALUES(DEA),MACD=VALUES(MACD)
+		diff=VALUES(diff),dea=VALUES(dea),macd=VALUES(macd)
+	</insert>
+	
+	<insert id="insertOrUpdateTradeBollData">
+		INSERT INTO tbl_trade_boll_data
+		VALUES
+		<foreach collection="datas" item="item" index="index"
+			separator=",">
+			(#{item.code},
+			#{item.tradeDate},
+			#{item.dataType},
+			#{item.mb},
+			#{item.up},
+			#{item.dn})
+		</foreach>
+		ON DUPLICATE KEY
+		UPDATE
+		mb=VALUES(mb),up=VALUES(up),dn=VALUES(dn)
 	</insert>
 
 	<insert id="insertOrUpdateTradeZJLSData">
-		INSERT INTO ${tblName}
+		INSERT INTO tbl_trade_zjls_data
 		VALUES
 		<foreach collection="datas" item="item" index="index"
 			separator=",">
 			(#{item.code},
 			#{item.tradeDate},
 			#{item.dateType},
+			0,
 			#{item.zhuInflows},
 			#{item.zhuInflowsRatio},
 			#{item.chaoInflows},
@@ -125,16 +144,17 @@
 			#{item.xiaoInflows},
 			#{item.xiaoInflowsRatio},
 			#{item.closing},
-			#{item.chg})
+			#{item.chg},
+			#{item.ws})
 		</foreach>
 		ON DUPLICATE KEY
 		UPDATE
-		zhuInflows=VALUES(zhuInflows),zhuInflowsRatio=VALUES(zhuInflowsRatio),
+		zjflows=values(zjflows),zhuInflows=VALUES(zhuInflows),zhuInflowsRatio=VALUES(zhuInflowsRatio),
 		chaoInflows=VALUES(chaoInflows),chaoInflowsRatio=VALUES(chaoInflowsRatio),
 		daInflows=VALUES(daInflows),daInflowsRatio=VALUES(daInflowsRatio),
 		zhongInflows=VALUES(zhongInflows),zhongInflowsRatio=VALUES(zhongInflowsRatio),
 		xiaoInflows=VALUES(xiaoInflows),xiaoInflowsRatio=VALUES(xiaoInflowsRatio),
-		closing=VALUES(closing),chg=VALUES(chg)
+		closing=VALUES(closing),chg=VALUES(chg),ws=VALUES(ws)
 	</insert>
 
 	<insert id="insertOrUpdateStockCode">
@@ -144,7 +164,7 @@
 	</insert>
 
 	<insert id="createStockTradeTbl">
-		CREATE TABLE ${tblName}_${year} LIKE ${tblName}
+		CREATE TABLE ${tblName} LIKE ${tblName}
 	</insert>
 
 	<insert id="insertOrUpdateTradeMRHYData">
@@ -202,5 +222,9 @@
 		zengchi=VALUES(zengchi),zhongxing=VALUES(zhongxing),
 		jianchi=VALUES(jianchi),maichu=VALUES(maichu)
 	</insert>
+	
+	<select id="calZJData" resultType="int">
+		call proc_calZJdata(#{code})
+	</select>
 
 </mapper> 

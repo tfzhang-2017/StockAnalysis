@@ -714,5 +714,27 @@ public class DateUtil {
   
     public static void main(String[] args) {  
         System.out.println(getYear() + "|" + getMonth() + "|" + getDate());  
+    } 
+
+    /** 
+     * 获得指定日期的当年第几周 
+     * @author dylan_xu 
+     * @date Mar 11, 2012 
+     * @return 
+     */  
+    public static short getWeekdayIndex(String dateStr) {  
+    	short retVal=0;
+        try {  
+        	SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = dateFormatter.parse(dateStr);
+
+            dateFormatter.applyPattern("w");            
+            retVal = Short.parseShort(dateFormatter.format(date));
+
+        } catch (Exception e) {  
+            logger.debug("DateUtil.getYear():" + e.getMessage());  
+        }  
+        return retVal;
     }  
+    
 }
